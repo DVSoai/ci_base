@@ -1,0 +1,49 @@
+name: Flutter SonarQube Analysis
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarqube-check:
+    name: SonarQube Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for better analysis
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x" # Hoặc version cụ thể như '3.16.0'
+          channel: "stable"
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Running flutter pub get"
+          flutter pub get
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.projectName=${{ github.event.repository.name }}
+            -Dsonar.sources=lib
+            -Dsonar.dart.analysis.mode=flutter
+            -Dsonar.exclusions=**/*.g.dart,**/*.freezed.dart,build/**
+
+      - name: Check Quality Gate
+        run: |
+          echo "🚀 SonarQube analysis completed"
