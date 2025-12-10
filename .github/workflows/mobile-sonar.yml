@@ -1,6 +1,12 @@
 name: Flutter SonarCloud Analysis
 
 on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_ORGANIZATION:
+        required: true
   pull_request:
     branches:
       - main
